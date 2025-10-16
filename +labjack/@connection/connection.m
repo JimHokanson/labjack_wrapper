@@ -14,6 +14,7 @@ classdef connection < handle
         h %labjack.ljm_handle
         is_streaming
         fio_chans
+        analog_input_settings
     end
 
     properties (Dependent)
@@ -92,6 +93,7 @@ device_type
             obj.h = labjack.ljm_handle(handle);
             obj.is_streaming = streaming;
             obj.fio_chans = labjack.chans.fio_chans(obj.h);
+            obj.analog_input_settings = labjack.chans.analog_input_settings(obj.h);
             
         end
         function getDevice(obj)

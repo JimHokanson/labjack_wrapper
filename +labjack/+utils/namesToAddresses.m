@@ -1,4 +1,4 @@
-function addresses = namesToAddresses(names)
+function addresses = namesToAddresses(names,convert)
 %
 %   addresses = labjack.utils.namesToAddresses(names)
 %
@@ -17,6 +17,10 @@ int * aAddresses,
 int * aTypes)
 %}
 
+if nargin == 1
+    convert = false;
+end
+
 n_addresses = length(names);
 
 scan_list_names = labjack.conv.mlStringsToDotNet(names);
@@ -26,9 +30,11 @@ dummy_types = NET.createArray('System.Int32', n_addresses);
 ljm_error = LabJack.LJM.NamesToAddresses(n_addresses, scan_list_names, ...
     scan_list_addresses, dummy_types);
 
-keyboard
-
-addresses = scan_list_addresses;
+if convert
+    addresses = double(scan_list_addresses);
+else
+    addresses = scan_list_addresses;
+end
 
 end
 

@@ -1,6 +1,6 @@
 function value = eReadName(h,name)
 %
-%   labjack.ljm.read.eReadName
+%   value = labjack.ljm.read.eReadName(h,name)
 %
 %   https://support.labjack.com/docs/ereadname-ljm-user-s-guide
 

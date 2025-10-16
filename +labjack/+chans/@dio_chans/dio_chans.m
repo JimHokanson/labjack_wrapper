@@ -31,6 +31,8 @@ classdef dio_chans < handle
     %   Questions
     %   ---------
     %   1) How do you change this to an analog input?
+    %           DIO_ANALOG_ENABLE
+    %   
 
 
     properties (Hidden)

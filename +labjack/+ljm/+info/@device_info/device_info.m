@@ -24,6 +24,8 @@ classdef device_info < handle
 
             labjack.utils.initAssembly();
 
+            handle = labjack.utils.resolveHandle(handle);
+
             [~, devType, connType, serNum, ipAddr, port, maxBytesMB] = ...
                 LabJack.LJM.GetHandleInfo(handle, 0, 0, 0, 0, 0, 0);
             
@@ -66,3 +68,18 @@ classdef device_info < handle
         end
     end
 end
+
+%{
+
+TODO: WE could add anything here to above
+PRODUCT_ID	60000	FLOAT32	R
+HARDWARE_VERSION	60002	FLOAT32	R
+FIRMWARE_VERSION	60004	FLOAT32	R
+BOOTLOADER_VERSION	60006	FLOAT32	R
+WIFI_VERSION	60008	FLOAT32	R
+HARDWARE_INSTALLED	60010	UINT32	R
+ETHERNET_MAC	60020	UINT64	R
+WIFI_MAC	60024	UINT64	R
+X SERIAL_NUMBER	60028	UINT32	R
+DEVICE_NAME_DEFAULT	60500	STRING	R/W
+%}

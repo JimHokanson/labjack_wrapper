@@ -2,19 +2,35 @@ classdef analog_input_settings < handle
     %
     %   Class:
     %   labjack.chans.analog_input_settings
+    %
+    %   See Also
+    %   --------
+    %   labjack.connection
 
     properties (Hidden)
         h
     end
 
     methods
-        function obj = analog_input_settings()
+        function obj = analog_input_settings(h)
+            obj.h = h;
         end
-        function getCurrentSettings(obj,chan)
+        function s = getCurrentSettings(obj,chan)
             s = struct;
-        end
-        function getRange(obj,chan)
+            s.range = obj.getRange(chan);
+            %resolution
+            %
+            %settling
+            %
+            %negative_channel
+            %   AIN_ALL_NEGATIVE_CH	
+            %   AIN#(0:13)_NEGATIVE_CH
 
+        end
+        function range = getRange(obj,chan)
+            name = sprintf('AIN%d_RANGE',chan);
+            h2 = obj.h.value;
+            range = labjack.ljm.read.eReadName(h2,name);
         end
         function getRangeOptions(obj,chan)
             h2 = obj.h.value;
@@ -86,8 +102,10 @@ AIN#(0:149)_EF_CONFIG_J	12000	FLOAT32	R / W	AIN_EF, AIN
 AIN#(0:249)_RANGE	40000	FLOAT32	R / W	AIN	
 AIN#(0:249)_NEGATIVE_CH	41000	UINT16	R / W	AIN	
 AIN#(0:249)_RESOLUTION_INDEX	41500	UINT16	R / W	AIN	
-AIN#(0:249)_SETTLING_US	42000	FLOAT32	R / W	AIN	
-AIN_ALL_RANGE	43900	FLOAT32	R / W	AIN	
+AIN#(0:249)_SETTLING_US	42000	FLOAT32	R / W	AIN
+
+DONE AIN_ALL_RANGE	43900	FLOAT32	R / W	AIN	
+
 AIN_ALL_NEGATIVE_CH	43902	UINT16	R / W	AIN	
 AIN_ALL_RESOLUTION_INDEX	43903	UINT16	R / W	AIN	
 AIN_ALL_SETTLING_US	43904	FLOAT32	R / W	AIN	
