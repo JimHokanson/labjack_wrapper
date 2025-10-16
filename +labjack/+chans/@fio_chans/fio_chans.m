@@ -2,6 +2,12 @@ classdef fio_chans < handle
     %
     %   labjack.chans.fio_chans
     %
+    %   FIO channels
+    %   - can act as analog inputs?
+    %   - can act as counters
+    %   - can act as digital inputs or outputs
+    %
+    %
     %   state
     %   direction
     %

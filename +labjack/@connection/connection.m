@@ -99,11 +99,22 @@ device_type
         function getDevice(obj)
 
         end
-        function startStream()
-
+        function s = startStream(obj,scan_rate,scans_per_read,chan_list)
+            %
+            %   Inputs
+            %   ------
+            %   scan_rate : 
+            %       # of samples per second
+            %   scans_per_read :
+            %       # of samples per read
+            %   scan_list : addresses or names  
+            %
+            %
+            
+            s = labjack.ljm.startStream(obj.h,scan_rate,scans_per_read,chan_list);
         end
-        function stopStream()
-
+        function stopStream(obj)
+            ljm.stream.stopStream(obj.h);
         end
     end
 end

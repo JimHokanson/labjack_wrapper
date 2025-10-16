@@ -7,8 +7,11 @@ function handle_out = resolveHandle(handle_in)
 %   --------
 %   labjack.ljm_handle
 
+%?? Check for isobject instead?
 if ~isnumeric(handle_in)
     handle_out = handle_in.value;
+else
+    handle_out = handle_in;
 end
 
 end

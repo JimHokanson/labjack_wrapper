@@ -1,13 +1,28 @@
 function addresses = namesToAddresses(names,convert)
 %
-%   addresses = labjack.utils.namesToAddresses(names)
+%   addresses = labjack.utils.namesToAddresses(names,*convert)
 %
+%   Inputs
+%   ------
+%   names
+%   
+%   Optional Inputs
+%   ---------------
+%   convert : default false
+%       If true the output is converted to a numeric MATLAB array.
+%       Otherwise it is left as a .NET array.
 %
-%   https://support.labjack.com/docs/namestoaddresses-ljm-user-s-guide
 %
 %   Example
 %   -------
 %   addresses = labjack.utils.namesToAddresses({'AIN0','AIN1'})
+%
+%
+%   See Also
+%   --------
+%   labjack.conv.mlStringsToDotNet
+%
+%   https://support.labjack.com/docs/namestoaddresses-ljm-user-s-guide
 
 %{
 LJM_ERROR_RETURN LJM_NamesToAddresses(
