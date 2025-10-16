@@ -4,6 +4,10 @@ function addresses = namesToAddresses(names)
 %
 %
 %   https://support.labjack.com/docs/namestoaddresses-ljm-user-s-guide
+%
+%   Example
+%   -------
+%   addresses = labjack.utils.namesToAddresses({'AIN0','AIN1'})
 
 %{
 LJM_ERROR_RETURN LJM_NamesToAddresses(
