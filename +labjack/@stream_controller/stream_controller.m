@@ -13,7 +13,15 @@ classdef stream_controller < handle
         read_frequency
         scans_per_per_read
         chan_list
+        n_channels
         streaming = false
+    end
+
+    properties
+        save_root
+        save_prefix
+        current_save_path
+        temp_buffer
     end
 
     methods
@@ -32,6 +40,9 @@ classdef stream_controller < handle
             obj.h = h;
             obj.scan_rate = scan_rate;
             obj.chan_list = chan_list;
+            obj.n_channels = length(chan_list);
+            obj.save_root = options.save_root;
+            obj.save_prefix = options.save_prefix;
             
             if ~isempty(options.scans_per_read)
                 obj.scans_per_per_read = options.scans_per_read;         
@@ -46,12 +57,22 @@ classdef stream_controller < handle
 
             %TODO: Setup the save file
 
-            s = labjack.ljm.startStream(obj.h,obj.scan_rate,scans_per_read,chan_list);
+            obj.temp_buffer = NET.createArray('System.Double', ...
+                obj.n_channels*obj.scans_per_per_read);
+
+            s = labjack.ljm.startStream(obj.h,obj.scan_rate,...
+                scans_per_read,obj.chan_list);
 
             obj.streaming = true;
         end
+        function readData(obj)
+            %
+            %   Set to buffer?
+            %   Show new data?
+            %   What about calibration?
+        end
         function stopStream(obj)
-
+            ljm.stream.stopStream(obj.h)
         end
     end
 end

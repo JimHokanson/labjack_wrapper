@@ -1,6 +1,6 @@
 function stopStream(handle)
 %
-%   ljm.stream.stopStream();
+%   ljm.stream.stopStream(handle)
 
 handle = labjack.utils.resolveHandle(handle);
 
