@@ -6,6 +6,14 @@ classdef stream_controller < handle
     %
     %
     %   TODO: We need to be able to handle calibration here
+    %
+
+    %   Writing data to disk, using parallel writing:
+    %   https://github.com/JimHokanson/daq2_matlab/blob/master/%2Bdaq2/%2Binput/%40data_writer/data_writer.m
+    %
+    %   https://github.com/JimHokanson/daq2_matlab/blob/master/%2Bdaq2/%40input_data_handler/input_data_handler.m
+    %
+    %   
 
     properties
         h
@@ -14,6 +22,8 @@ classdef stream_controller < handle
         scans_per_per_read
         chan_list
         n_channels
+
+        %Whether currently streaming or not
         streaming = false
     end
 
@@ -56,6 +66,11 @@ classdef stream_controller < handle
         function startStream(obj)
 
             %TODO: Setup the save file
+
+            %Create the save path and file (if requested)
+            if ~isempty(obj.save_root)
+
+            end
 
             obj.temp_buffer = NET.createArray('System.Double', ...
                 obj.n_channels*obj.scans_per_per_read);

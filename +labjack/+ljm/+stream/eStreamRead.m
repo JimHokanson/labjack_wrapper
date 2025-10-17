@@ -1,10 +1,16 @@
 function s = eStreamRead(handle,buffer)
 %
-%   s = labjack.stream.eStreamRead(handle,buffer)
+%   s = labjack.ljm.stream.eStreamRead(handle,buffer)
 %
 %   Inputs
 %   ------
-%   
+%   handle
+%   buffer
+%
+%   See Also
+%   --------
+%   labjack.ljm.stream.createStreamBuffer
+%   labjack.ljm.startStream
 
 %Work in progress
 
@@ -16,6 +22,8 @@ function s = eStreamRead(handle,buffer)
 s = struct;
 s.device_scan_backlog = device_scan_backlog;
 s.ljm_scan_backlog = ljm_scan_backlog;
+
+%TODO: I think we want to reshape to be [samples x channels]
 s.data = double(buffer);
 
 

@@ -16,8 +16,17 @@ function s = startStream(handle,scan_rate,scans_per_read,scan_list)
 %   
 %   Example
 %   -------
-%   
+%   scan_rate = 100;
 %
+%
+%   See Also
+%   --------
+%   ljm.stream.stopStream
+%   
+%   
+%   
+%   Documentation
+%   -------------
 %   https://support.labjack.com/docs/estreamstart-ljm-user-s-guide
 
 handle = labjack.utils.resolveHandle(handle);
