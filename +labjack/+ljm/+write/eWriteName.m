@@ -4,6 +4,8 @@ function eWriteName(h,name,value)
 %
 %   https://support.labjack.com/docs/ewritename-ljm-user-s-guide
 
-    [ljmError] = LabJack.LJM.eWriteName(h,name,double(value));
+    h = labjack.utils.resolveHandle(h);
+
+    ljm_error = LabJack.LJM.eWriteName(h,name,double(value));
 
 end

@@ -16,7 +16,10 @@ classdef ljm_handle < handle
             obj.value  = value;
         end
         function delete(obj)
-            LabJack.LJM.Close(obj.value);
+            % disp('I was called')
+            try
+                LabJack.LJM.Close(obj.value);
+            end
         end
     end
 end

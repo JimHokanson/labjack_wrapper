@@ -63,28 +63,46 @@ classdef fio_chans < handle
             obj.h = h;
         end
         function value = getDirectionAll(obj)
-            temp = labjack.ljm.read.eReadName(obj.h.value,'FIO_DIRECTION');
+            temp = labjack.ljm.read.eReadName(obj.h,'FIO_DIRECTION');
             temp = uint8(temp);
             value = double(bitget(temp,1:8));
         end
-        function setChanDirection(obj,chan,direction)
+        function setChanAsOutput(obj,chan,default_value)
+            
             %
-            %
-            %   No set single chan direction option
-            %
-            %   f.setChanDirection(7,true);
-            %
-            %   TODO: Change to in/out as an input, not false/true
+            %   
 
-            direction = char(direction); %in case a string
-            make_output = lower(direction(1)) == 'h';
+            obj.setChanValue(chan,default_value);
 
-            bits = obj.getDirectionAll();
-            bits(chan) = make_output;
+        end
+        function setChanAsInput(obj,chan)
+            %This function has a side effect of setting direction
+            obj.getChanValue(chan);
+        end
 
-            value = uint8(double(bits)*(2.^(0:7))'); 
-            h2 = obj.h.value;
-            labjack.ljm.write.eWriteName(h2,'FIO_DIRECTION',value)
+        %This didn't see to be working
+        % % % function setChanDirection(obj,chan,direction,default_value)
+        % % %     %
+        % % %     %
+        % % %     %   No set single chan direction option
+        % % %     %
+        % % %     %   f.setChanDirection(7,true);
+        % % %     %
+        % % %     %   TODO: Change to in/out as an input, not false/true
+        % % % 
+        % % %     direction = char(direction); %in case a string
+        % % %     make_output = lower(direction(1)) == 'o';
+        % % % 
+        % % %     bits = obj.getDirectionAll();
+        % % %     bits(chan) = make_output;
+        % % % 
+        % % %     value = uint8(double(bits)*(2.^(0:7))'); 
+        % % %     h2 = obj.h.value;
+        % % %     labjack.ljm.write.eWriteName(h2,'FIO_DIRECTION',value)
+        % % % end
+        function value = getChanValue(obj,chan)
+            name = sprintf('FIO%d',chan);
+            value = labjack.ljm.read.eReadName(obj.h,name);
         end
         function setChanValue(obj,chan,is_high)
             %
@@ -94,8 +112,7 @@ classdef fio_chans < handle
 
             %For now we'll use safe method. Eventually we may expose
             %non-safe method
-            h2 = obj.h.value;
-            labjack.ljm.write.eWriteName(h2,name,is_high)
+            labjack.ljm.write.eWriteName(obj.h,name,is_high)
         end
     end
 end

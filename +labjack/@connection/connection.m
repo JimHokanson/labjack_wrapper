@@ -12,7 +12,7 @@ classdef connection < handle
 
     properties
         h %labjack.ljm_handle
-        is_streaming
+        is_streaming_type
         fio_chans
         analog_input_settings
     end
@@ -65,24 +65,26 @@ device_type
                 use a serial number, IP address, or device name
             %}
 
-            persistent h2
+
+            % %TODO: This needs to be changed to a weak reference
+            % persistent h2
 
             labjack.utils.initAssembly();
             
-            [ljmError, handle] = LabJack.LJM.OpenS(device_type,connection_type,identifier,0);
+            [ljm_error, handle] = LabJack.LJM.OpenS(device_type,connection_type,identifier,0);
             %TODO: Support error checking
 
-            if isempty(h2)
-                h2 = containers.Map('KeyType','int32','ValueType','any');
-            end
+            % if isempty(h2)
+            %     h2 = containers.Map('KeyType','int32','ValueType','any');
+            % end
 
-            if isKey(h2,handle)
-                obj = h2(handle);
-            else
+            % if isKey(h2,handle)
+            %     obj = h2(handle);
+            % else
                 streaming = true;
                 obj = labjack.connection(handle,streaming);
-                h2(handle) = obj;
-            end
+            %     h2(handle) = obj;
+            % end
         end
         
     end
@@ -91,30 +93,34 @@ device_type
         function obj = connection(handle,streaming)
             
             obj.h = labjack.ljm_handle(handle);
-            obj.is_streaming = streaming;
+            obj.is_streaming_type = streaming;
             obj.fio_chans = labjack.chans.fio_chans(obj.h);
             obj.analog_input_settings = labjack.chans.analog_input_settings(obj.h);
             
         end
         function getDevice(obj)
-
-        end
-        function s = startStream(obj,scan_rate,scans_per_read,chan_list)
+            % 
+            %   I eventually wanted to return a device specific object
+            %   that would provide device specific info
             %
-            %   Inputs
-            %   ------
-            %   scan_rate : 
-            %       # of samples per second
-            %   scans_per_read :
-            %       # of samples per read
-            %   scan_list : addresses or names  
-            %
-            %
-            
-            s = labjack.ljm.startStream(obj.h,scan_rate,scans_per_read,chan_list);
+            %   e.g., a T4 object
         end
-        function stopStream(obj)
-            ljm.stream.stopStream(obj.h);
-        end
+        % function s = startStream(obj,scan_rate,scans_per_read,chan_list)
+        %     %
+        %     %   Inputs
+        %     %   ------
+        %     %   scan_rate : 
+        %     %       # of samples per second
+        %     %   scans_per_read :
+        %     %       # of samples per read
+        %     %   scan_list : addresses or names  
+        %     %
+        %     %
+        % 
+        %     s = labjack.ljm.startStream(obj.h,scan_rate,scans_per_read,chan_list);
+        % end
+        % function stopStream(obj)
+        %     ljm.stream.stopStream(obj.h);
+        % end
     end
 end
