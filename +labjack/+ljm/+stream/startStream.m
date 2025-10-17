@@ -36,7 +36,7 @@ if isstring(scan_list) || iscell(scan_list)
     scan_list = labjack.utils.namesToAddresses(scan_list,convert_flag);
 end
 
-n_addresses = aScanList.Length;
+n_addresses = scan_list.Length;
 [~, scan_rate] = LabJack.LJM.eStreamStart(handle, scans_per_read, ...
             n_addresses, scan_list, scan_rate);
 

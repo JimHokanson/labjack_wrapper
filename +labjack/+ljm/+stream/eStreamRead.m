@@ -16,6 +16,8 @@ function s = eStreamRead(handle,buffer)
 
 %   https://support.labjack.com/docs/estreamread-ljm-user-s-guide
 
+handle = labjack.utils.resolveHandle(handle);
+
 [~, device_scan_backlog, ljm_scan_backlog] = LabJack.LJM.eStreamRead( ...
                 handle, buffer, 0, 0);
 
