@@ -69,11 +69,7 @@ classdef fio_chans < handle
         end
         function setChanAsOutput(obj,chan,default_value)
             
-            %
-            %   
-
             obj.setChanValue(chan,default_value);
-
         end
         function setChanAsInput(obj,chan)
             %This function has a side effect of setting direction

@@ -14,6 +14,11 @@ function s = startStream(handle,scan_rate,scans_per_read,scan_list)
 %       # of samples per read
 %   scan_list : addresses or names    
 %   
+%   Outputs
+%   -------
+%   s : struct
+%       .scan_rate
+%
 %   Example
 %   -------
 %   scan_rate = 100;

@@ -2,7 +2,9 @@ function c = getDefaultDevice()
 %
 %   c = labjack.getDefaultDevice()
 %
-%   
+%   Outputs
+%   -------
+%   labjack.connection
 
 
 %TODO: Do we want to support non-streaming

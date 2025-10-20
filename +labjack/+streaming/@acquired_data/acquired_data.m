@@ -11,6 +11,8 @@ classdef acquired_data < handle
     %
     %   See Also
     %   --------
+    %   big_plot.streaming_data
+    %   labjack.stream_controller
 
     
     properties
@@ -20,12 +22,20 @@ classdef acquired_data < handle
         
         short_names
         
-        daq_entries %struct
         %objects are field in the struct
+        %Accessed via 'short_names' for the field
+        daq_entries %struct
         
-        daq_entries_array %[big_plot.streaming_data]
+        %This is an array of objects. The order matches that of short_names
+        %
+        %   short_names{1} => daq_entries_array(1)
+        daq_entries_array big_plot.streaming_data
         
         n_chans
+
+        n_samples_added
+
+
         non_daq_entries %fields of type ... NYI
         non_daq_xy_entries %fields of type
         %daq2.data.non_daq_streaming_xy
@@ -84,6 +94,7 @@ classdef acquired_data < handle
             temp = cell(1,n_chans);
             
             obj.n_chans = n_chans;
+            obj.n_samples_added = zeros(1,n_chans);
             for i = 1:n_chans
                 %TODO: Eventually I want to use a local streaming_data class
                 dt = 1/fs(i);
@@ -96,89 +107,82 @@ classdef acquired_data < handle
         end
     end
     methods
-        function iplot = plotDAQData(obj,varargin)
-            %
-            %   TODO: This is a work in progress ...
-            %
-            %   Optional Inputs
-            %   ---------------
-            %   h_fig :
-            %   position : 
-            %
-            %   See Also
-            %   --------
-                 
-            in.h_fig = [];
-            in.position = [];
-            in = sl.in.processVarargin(in,varargin);
-            
-            if isempty(in.h_fig) || ~isvalid(in.h_fig)
-                f = figure;
-                %Only position if it didn't exist
-                
-                if ~isempty(in.position)
-                    set(f,'Position',in.position);
-                end
-            else
-                f = in.h_fig;
-                clf
-                figure(in.h_fig);
-            end
-            
-            
-            ax = cell(obj.n_chans,1);
-            for i = 1:obj.n_chans
-                ax{i} = subplot(obj.n_chans,1,i);
-                plotBig(obj.daq_entries_array(i));
-            end
-            
-            names = fieldnames(obj.daq_entries);
-            %names = regexprep(names,'_','\n');
-            iplot = interactive_plot(f,ax,...
-                'streaming',true,...
-                'axes_names',names,...
-                'comments',true);
-            
-        end
-%         function rec_data_entry = initNonDaqEntry(obj,name,fs,n_seconds_init)
-%             %
-%             %   For now non-DAQ entries will use the old class
-%             rec_data_entry = aua17.data.recorded_data_entry(name,fs,n_seconds_init);
-%             obj.non_daq_entries.(name) = rec_data_entry;
-%         end
-        function xy_obj = getXYData(obj,name)
-            %
-            %   xy_obj = getXYData(obj,name)
-            %
-            %   Output
-            %   ------
-            %   xy_obj : daq2.data.non_daq_streaming_xy
-            
-            if isfield(obj.non_daq_xy_entries,name)
-               xy_obj = obj.non_daq_xy_entries.(name);
-            else
-               xy_obj = [];
-            end
-        end
-        function addNonDaqData(obj,name,data)
-            
-        end
-%         function initNonDaqXYData(obj,name,varargin)
-%             %We can initialize on adding, we just don't get as much control
-%            error('Not yet implemented')
-%         end
-        function addNonDaqXYData(obj,name,y_data,x_data)
-            %non_daq_xy_map
-            
-            if isfield(obj.non_daq_xy_entries,name)
-               xy_obj = obj.non_daq_xy_entries.(name);
-            else
-               xy_obj = daq2.data.non_daq_streaming_xy(name);
-               obj.non_daq_xy_entries.(name) = xy_obj;
-            end
-            
-            xy_obj.addSamples(y_data,x_data);
-            
+        % function iplot = plotDAQData(obj,varargin)
+        %     %
+        %     %   TODO: This is a work in progress ...
+        %     %
+        %     %   Optional Inputs
+        %     %   ---------------
+        %     %   h_fig :
+        %     %   position : 
+        %     %
+        %     %   See Also
+        %     %   --------
+        % 
+        %     in.h_fig = [];
+        %     in.position = [];
+        %     in = sl.in.processVarargin(in,varargin);
+        % 
+        %     if isempty(in.h_fig) || ~isvalid(in.h_fig)
+        %         f = figure;
+        %         %Only position if it didn't exist
+        % 
+        %         if ~isempty(in.position)
+        %             set(f,'Position',in.position);
+        %         end
+        %     else
+        %         f = in.h_fig;
+        %         clf
+        %         figure(in.h_fig);
+        %     end
+        % 
+        % 
+        %     ax = cell(obj.n_chans,1);
+        %     for i = 1:obj.n_chans
+        %         ax{i} = subplot(obj.n_chans,1,i);
+        %         plotBig(obj.daq_entries_array(i));
+        %     end
+        % 
+        %     names = fieldnames(obj.daq_entries);
+        %     %names = regexprep(names,'_','\n');
+        %     iplot = interactive_plot(f,ax,...
+        %         'streaming',true,...
+        %         'axes_names',names,...
+        %         'comments',true);
+        % 
+        % end
+        % function xy_obj = getXYData(obj,name)
+        %     %
+        %     %   xy_obj = getXYData(obj,name)
+        %     %
+        %     %   Output
+        %     %   ------
+        %     %   xy_obj : daq2.data.non_daq_streaming_xy
+        % 
+        %     if isfield(obj.non_daq_xy_entries,name)
+        %        xy_obj = obj.non_daq_xy_entries.(name);
+        %     else
+        %        xy_obj = [];
+        %     end
+        % end
+        % function addNonDaqData(obj,name,data)
+        % 
+        % end
+        % function addNonDaqXYData(obj,name,y_data,x_data)
+        %     %non_daq_xy_map
+        % 
+        %     if isfield(obj.non_daq_xy_entries,name)
+        %        xy_obj = obj.non_daq_xy_entries.(name);
+        %     else
+        %        xy_obj = daq2.data.non_daq_streaming_xy(name);
+        %        obj.non_daq_xy_entries.(name) = xy_obj;
+        %     end
+        % 
+        %     xy_obj.addSamples(y_data,x_data);
+        % 
+        % end
+        function updateCalibration(obj,chan_index,m,b)
+            obj.daq_entries_array(chan_index).setCalibration(m,b);
         end
         function addDAQData(obj,new_data)
             %
@@ -192,9 +196,14 @@ classdef acquired_data < handle
             for i = 1:obj.n_chans
                 %entry is object: big_plot.streaming_data
                 obj.daq_entries_array(i).addData(new_data{i});
+                obj.n_samples_added(i) = obj.n_samples_added(i) + length(new_data{i});
             end
         end
         function out = getChannel(obj,name)
+            if isnumeric(name)
+                index = name;
+                name = obj.short_names{index};
+            end
             out = obj.daq_entries.(name);
         end
     end
