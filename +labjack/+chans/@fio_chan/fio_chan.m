@@ -21,7 +21,7 @@ classdef fio_chan < handle
         end
         function setChanAsOutput(obj,default_value)
 
-            obj.setChanValue(obj.chan_number,default_value);
+            obj.setChanValue(default_value);
 
         end
         function setChanAsInput(obj,chan)
