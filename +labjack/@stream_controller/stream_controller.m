@@ -3,13 +3,14 @@ classdef stream_controller < handle
     %   Class:
     %   labjack.stream_controller
     %
-    %
-    %   I'd like this to handle data reading and saving and potentially
-    %   plotting.
-    %
-    %
-    %   TODO: We need to be able to handle calibration here
-    %
+    %   This class handles:
+    %   1) Streaming of analog input data
+    %   2) Saving of data to disk
+    %   
+    %   Requirements
+    %   ------------
+    %   This class relies on the following library:
+    %   https://github.com/JimHokanson/plotBig_Matlab
     %
     %   See Also
     %   --------
@@ -40,10 +41,6 @@ classdef stream_controller < handle
         %   cellstr
         chan_aliases
 
-        %These two are not currently used. Placed on disk and in streaming
-        %data instead.
-        m
-        b
         n_calibrations
 
         n_channels
@@ -60,11 +57,11 @@ classdef stream_controller < handle
     end
 
     properties
+        %   ----------    saving   --------------
         save_root
         save_prefix
         current_save_path
         h_mat %matlab.io.MatFile (not allowed to be uncommented)
-        
     end
 
     methods
@@ -77,7 +74,16 @@ classdef stream_controller < handle
             %   ------
             %   scan_rate
             %   chan_list
-            %   options
+            %
+            %   Optional Inputs
+            %   ---------------
+            %   read_frequency
+            %       How often to read new samples from the DAQ.
+            %   scans_per_read : default, uses read_frequency
+            %       I think of this as the number of samples per read. This
+            %       is the parameter that LabJack wants. For convenience
+            %       the read_frequency option is provided as well.
+            
 
             arguments
                 h
@@ -110,8 +116,6 @@ classdef stream_controller < handle
 
             obj.n_channels = length(chan_list);
 
-            obj.m = ones(obj.n_channels,1);
-            obj.b = zeros(obj.n_channels,1);
             obj.n_calibrations = zeros(obj.n_channels,1);
 
             obj.save_root = options.save_root;
@@ -122,7 +126,7 @@ classdef stream_controller < handle
                     error('Specified save directory does not exist')
                 end
                 d = datetime("now");
-                d.Format = "yyyy_MM_dd__hh_mm_ss";
+                d.Format = "yyyy_MM_dd__HH_mm_ss";
                 file_name = sprintf('%s__data_%s.mat',obj.save_prefix,string(d));
                 obj.current_save_path = fullfile(obj.save_root,file_name);
                 
@@ -141,36 +145,43 @@ classdef stream_controller < handle
             
         end
         function s = startStream(obj)
-
-            %TODO: Setup the save file
+            %
+            %   s = startStream(obj)
 
             %Create the save path and file (if requested)
+            %--------------------------------------------------
             if ~isempty(obj.current_save_path)
                 obj.h_mat = matlab.io.MatFile(obj.current_save_path);
                 obj.h_mat.calibration = struct;
                 obj.h_mat.data = struct;
             end
 
+            %Creation of the acquired data object which stores the
+            %collected data in memory
             obj.data = labjack.streaming.acquired_data(obj.chan_aliases,obj.scan_rate); 
+            
 
+            %This is needed for reading the data. We do it once rather
+            %than once per read.
             obj.temp_buffer = NET.createArray('System.Double', ...
                 obj.n_channels*obj.scans_per_read);
 
-            chan_out = obj.data.daq_entries_array;
-
+            %Starting of the streaming
             s = labjack.ljm.stream.startStream(obj.h,obj.scan_rate,...
                 obj.scans_per_read,obj.chan_list);
-
-            s.channels = chan_out;
+            s.channels = obj.data.daq_entries_array;
 
             obj.streaming = true;
         end
-        function updateCalibration(obj,chan_index,m,b)
+        function updateCalibration(obj,chan_index,m,b,units)
             %
             %   ASSUMES that the stream has started and that the mat file
             %   has been created.
             %   
+            %   Approach:
+            %   
 
+            %For each channel we track the number of calibrations f
             obj.n_calibrations(chan_index) = obj.n_calibrations(chan_index) + 1;
 
             I = obj.n_calibrations(chan_index);
@@ -182,6 +193,8 @@ classdef stream_controller < handle
             cal_index = n1(chan_index)+1;
 
             current_name = obj.chan_aliases{chan_index};
+
+            %TODO: Use getCalibrationNames
             current_name = ['calibration__' current_name];
 
             %Is this really needed with two forms?
@@ -189,15 +202,25 @@ classdef stream_controller < handle
                 obj.h_mat.([current_name '_m']) = m;
                 obj.h_mat.([current_name '_b']) = b;
                 obj.h_mat.([current_name '_index']) = cal_index;
+                obj.h_mat.([current_name '_units']) = string(units);
             else
                 obj.h_mat.([current_name '_m'])(I,1) = m;
                 obj.h_mat.([current_name '_b'])(I,1) = b;
                 obj.h_mat.([current_name '_index'])(I,1) = cal_index;
+                obj.h_mat.([current_name '_units'])(I,1) = string(units);
             end
 
             %Update streaming data
             obj.data.updateCalibration(chan_index,m,b);
 
+        end
+        function s = getCalibrationNames(obj,chan_name)
+            chan_name = char(chan_name);
+            current_name = ['calibration__' chan_name];
+            s.m = [current_name '_m'];
+            s.b = [current_name '_b'];
+            s.index = [current_name '_index'];
+            s.units = [current_name '_units'];
         end
         function readData(obj)
             %

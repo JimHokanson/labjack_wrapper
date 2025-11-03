@@ -72,6 +72,15 @@ device_type
             labjack.utils.initAssembly();
             
             [ljm_error, handle] = LabJack.LJM.OpenS(device_type,connection_type,identifier,0);
+
+            %TODO: How do we catch 
+            % errors = LabJack.('LJM+LJMERROR');
+            % exceptions = LabJack.("LJM+LJMException");
+            % 
+            % if errors.isequal(ljm_error,0)
+            % keyboard
+            %ljm_error
+
             %TODO: Support error checking
 
             % if isempty(h2)

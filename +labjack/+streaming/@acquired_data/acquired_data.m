@@ -16,9 +16,6 @@ classdef acquired_data < handle
 
     
     properties
-        % raw_session
-        % perf_mon
-        % cmd_window
         
         short_names
         
@@ -35,11 +32,6 @@ classdef acquired_data < handle
 
         n_samples_added
 
-
-        non_daq_entries %fields of type ... NYI
-        non_daq_xy_entries %fields of type
-        %daq2.data.non_daq_streaming_xy
-        ip
     end
     
     properties (Dependent)
@@ -59,33 +51,13 @@ classdef acquired_data < handle
             %
             %   Inputs
             %   ------
-            %   fs :
-            %       Sampling Rate of highest rate channel
-            %   names :
-            %       Names of the channels being recorded
-            %   dec_rates :
-            %       Decimation rates for each channel
-            %   ip : interactive_plot
-            %   n_seconds_init :
-            %       How many seconds to allocate for each channel
             %
 
+            %This is for an initial allocation guess
             TRIAL_DURATION_S = 3600; %seconds
             
-            % obj.raw_session = raw_session;
-            % obj.perf_mon = perf_mon;
-            % obj.cmd_window = cmd_window;
-            
-            %obj.ip = ip;
-            
-            %ai_chans = raw_session.getAnalogInputChans();
-            
             obj.daq_entries = struct;
-            obj.non_daq_entries= struct;
-            obj.non_daq_xy_entries = struct;
-            
-            %TODO: Add on daq__ to avoid any name conflicts ...
-            
+                        
             n_chans = length(chan_names);
             obj.short_names = chan_names;
             disp_names = chan_names;
@@ -107,80 +79,6 @@ classdef acquired_data < handle
         end
     end
     methods
-        % function iplot = plotDAQData(obj,varargin)
-        %     %
-        %     %   TODO: This is a work in progress ...
-        %     %
-        %     %   Optional Inputs
-        %     %   ---------------
-        %     %   h_fig :
-        %     %   position : 
-        %     %
-        %     %   See Also
-        %     %   --------
-        % 
-        %     in.h_fig = [];
-        %     in.position = [];
-        %     in = sl.in.processVarargin(in,varargin);
-        % 
-        %     if isempty(in.h_fig) || ~isvalid(in.h_fig)
-        %         f = figure;
-        %         %Only position if it didn't exist
-        % 
-        %         if ~isempty(in.position)
-        %             set(f,'Position',in.position);
-        %         end
-        %     else
-        %         f = in.h_fig;
-        %         clf
-        %         figure(in.h_fig);
-        %     end
-        % 
-        % 
-        %     ax = cell(obj.n_chans,1);
-        %     for i = 1:obj.n_chans
-        %         ax{i} = subplot(obj.n_chans,1,i);
-        %         plotBig(obj.daq_entries_array(i));
-        %     end
-        % 
-        %     names = fieldnames(obj.daq_entries);
-        %     %names = regexprep(names,'_','\n');
-        %     iplot = interactive_plot(f,ax,...
-        %         'streaming',true,...
-        %         'axes_names',names,...
-        %         'comments',true);
-        % 
-        % end
-        % function xy_obj = getXYData(obj,name)
-        %     %
-        %     %   xy_obj = getXYData(obj,name)
-        %     %
-        %     %   Output
-        %     %   ------
-        %     %   xy_obj : daq2.data.non_daq_streaming_xy
-        % 
-        %     if isfield(obj.non_daq_xy_entries,name)
-        %        xy_obj = obj.non_daq_xy_entries.(name);
-        %     else
-        %        xy_obj = [];
-        %     end
-        % end
-        % function addNonDaqData(obj,name,data)
-        % 
-        % end
-        % function addNonDaqXYData(obj,name,y_data,x_data)
-        %     %non_daq_xy_map
-        % 
-        %     if isfield(obj.non_daq_xy_entries,name)
-        %        xy_obj = obj.non_daq_xy_entries.(name);
-        %     else
-        %        xy_obj = daq2.data.non_daq_streaming_xy(name);
-        %        obj.non_daq_xy_entries.(name) = xy_obj;
-        %     end
-        % 
-        %     xy_obj.addSamples(y_data,x_data);
-        % 
-        % end
         function updateCalibration(obj,chan_index,m,b)
             obj.daq_entries_array(chan_index).setCalibration(m,b);
         end
