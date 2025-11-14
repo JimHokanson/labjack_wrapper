@@ -72,6 +72,7 @@ classdef stream_controller < handle
             %
             %   Inputs
             %   ------
+            %   h : labjack.connection OR 
             %   scan_rate
             %   chan_list
             %

@@ -3,6 +3,11 @@ classdef acquired_data < handle
     %   Class:
     %   labjack.streaming.acquired_data
     %
+    %   Requirements
+    %   ------------
+    %   This class relies on the following library:
+    %   https://github.com/JimHokanson/plotBig_Matlab
+    %
     %   The current design holds all acquired data in memory (although it 
     %   is also saved to disk as it is collected - elsewhere).
     %
@@ -51,9 +56,14 @@ classdef acquired_data < handle
             %
             %   Inputs
             %   ------
+            %   chan_names
+            %   scan_rate
             %
 
             %This is for an initial allocation guess
+            %
+            %   This goes into the streaming objects. If it is exceeded
+            %   the array will expand to accomodate.
             TRIAL_DURATION_S = 3600; %seconds
             
             obj.daq_entries = struct;
