@@ -8,7 +8,20 @@ classdef comments < handle
     %   labjack.stream_controller
     %   labjack.streaming.acquired_data
 
+    %{
+        msgs = ["test" "one" "two" "three"];
+        times = [0.5 1 3 10];
+        for i = 1:3
+            ax(i) = subplot(3,1,i);
+            plot(1:10)
+        end
+        c = labjack.streaming.comments();
+        c.addComments(msgs,times);
+        cp = c.getCommentPlotter(ax);
+    %}
+
     properties (Dependent)
+        %cellstr
         values
         times
         ids
@@ -17,10 +30,13 @@ classdef comments < handle
     properties (Hidden)
         h_values = {}
         h_times = []
-        h_ids
-        h_deleted
-        last_id = 0
 
+        %This is currently just 1:n
+        h_ids
+        h_deleted = false(1,0)
+        last_id = 0
+        n_comments = 0
+        
         %%matlab.io.MatFile or empty
         h_mat
     end
@@ -39,15 +55,49 @@ classdef comments < handle
 
     methods
         function obj = comments(h_mat)
+            %
+            %   comments(*h_mat)
+            %
+            %   Inputs
+            %   ------
+            %   h_mat: matlab.io.MatFile
+            %   
+
+            if nargin == 0
+                h_mat = [];
+            end
             obj.h_mat = h_mat;
         end
+        function addComments(obj,messages,times)
+            %
+            %   Inputs
+            %   ------
+            %   messages : strings or cellstr or char
+            %   times : numeric array
+
+            if ischar(messages)
+                messages = {messages};
+            end
+            for i = 1:length(times)
+                if iscell(messages)
+                    obj.addComment(messages{i},times(i))
+                else
+                    obj.addComment(messages(i),times(i))
+                end
+            end
+        end
         function addComment(obj,message,time)
+            %
+            %   For now we'll just grow the arrays. Eventually
+            %   we may do better preallocation
+
             message = char(message);
             obj.h_ids = [obj.h_ids obj.last_id+1];
             obj.h_values = [obj.h_values {message}];
             obj.h_times = [obj.h_times time];
             obj.h_deleted = [obj.h_deleted false];
             obj.last_id = obj.last_id + 1;
+            obj.n_comments = obj.n_comments + 1;
             I = obj.last_id;
             obj.saveEntry(I);
         end
@@ -80,7 +130,9 @@ classdef comments < handle
             obj.h_deleted(id) = true;
             obj.saveEntry(id);
         end
-        function cp = getCommentPlotter(h_axes,h_axes_text)
+        function cp = getCommentPlotter(obj,h_axes)
+            %TODO: Figure out how to expose this better
+            h_axes_text = h_axes(end);
             cp = labjack.streaming.comment_plotter(h_axes,h_axes_text,obj);
         end
     end
