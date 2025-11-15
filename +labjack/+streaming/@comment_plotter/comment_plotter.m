@@ -3,23 +3,58 @@ classdef comment_plotter < handle
     %   Class:
     %   labjack.streaming.comment_plotter
     %
-    %   TODO: Get this from the comments as a method
+    %   This should generally be accessed via the comments object:
+    %   labjack.streaming.comments
     %
-    %   getCommentPlotter(pass_in_constructor_vars)
+    %       c.enableCommentPlotting(ax);
+    %   
     %
     %   Functionality
     %   -------------
-    %   - plot comments
-    %   - move comments
-    %   - add comments (how to expose?)
+    %   - plots comments
+    %   - allows moving comments (click on the text to move)
+    %   - add comments (how to expose?) (NOT YET IMPLEMENTED)
     %       - eventually have interface
     %       - for now, expect GUI code to handle on its own
     %       - could have a method that you pass a context menu into
     %         that adds a "add comment" box
     %
+    %   
+    %   Data Model
+    %   ----------
+    %   - updates here - translate back to comments
+    %   - adding comments - assuming (for now) that comments know
+    %
+    %   OR RATHER - anything graphical, let comments object know
+    %       - anything in code, assumes comments object knows
+    %
+    %
     %   See Also
     %   --------
     %   labjack.streaming.comments
+    %
+    %
+    %   Limitations
+    %   -----------
+    %   - Currently changes the units of the figure to normalized. This
+    %   helps with the annotation markup when moving a line
+    %
+    %   Improvements
+    %   ------------
+    %   1) Allow a cell array of axes as an input
+    %   2) Make the text axes the bottom one by default
+    %   3) Allow aligning text on the top of an axes (for use on the
+    %   top most axes)
+    %   4) Allow enabling, or maybe enable by default, the better resizing
+    %   function. Note, only one callback allowed which is why I haven't
+    %   used this (LimitsChangedFcn). In other words, if this class sets
+    %   it, then the user can't set it as well.
+    %   5) Currently IDs and indices are linked. Ideally we could allow
+    %   deleting and still track what is what.
+    %   
+
+
+
     %
     %   https://github.com/JimHokanson/interactive_matlab_plot/blob/master/%2Binteractive_plot/%40comments/comments.m
     
@@ -49,6 +84,8 @@ classdef comment_plotter < handle
         h_fig
         h_axes
         h_axes_text
+        y_bottom_axes
+        y_top_axes
 
         %Callbacks
         %----------------
@@ -92,17 +129,54 @@ classdef comment_plotter < handle
     end
 
     methods
-        function obj = comment_plotter(h_axes,h_axes_text,comments)
+        function obj = comment_plotter(h_axes,comments)
             %
             %   labjack.streaming.comment_plotter(h_axes,h_axes_text,comments)
             %
-            %   h_axes - all relevant axes
-            %   h_axes_text - axes that will plot the text
+            %   Inputs
+            %   ------
+            %   h_axes: {axes} or [axes] 
+            %       All relevant axes. These should generally be stacked.
+            %   comments: labjack.streaming.comments
+
+            if iscell(h_axes)
+                n_cells = length(h_axes);
+                h_axes = [h_axes{:}];
+                n_axes = length(h_axes);
+                if n_axes ~= n_cells
+                    error('# of axes changed when collapsing from cell array of axes to axes array')
+                end
+            end
 
             obj.h_axes = h_axes;
-            obj.h_axes_text = h_axes_text;
             obj.comments = comments;
             obj.h_fig = h_axes(1).Parent;
+
+            %Current limitation: ideally we would work around this
+            if obj.h_fig.Units ~= "normalized"
+                obj.h_fig.Units = "normalized";
+            end
+
+            n_axes = length(h_axes);
+            y_bottom = zeros(1,n_axes);
+
+            for i = 1:n_axes
+                y_bottom(i) = h_axes(i).Position(2);
+            end
+
+            [~,I] = max(y_bottom);
+            h_top_axes = h_axes(I);
+            [~,I] = min(y_bottom);
+            h_bottom_axes = h_axes(I);
+
+
+            obj.h_axes_text = h_bottom_axes;
+
+
+            p_top = get(h_top_axes,'Position');
+            obj.y_top_axes = p_top(2)+p_top(4);
+            p_bottom = get(h_bottom_axes,'Position');
+            obj.y_bottom_axes = p_bottom(2);
 
             obj.ylim_listener = addlistener(obj.h_axes_text, 'YLim', ...
                 'PostSet', @(~,~) obj.ylimChanged);
@@ -152,6 +226,10 @@ classdef comment_plotter < handle
             obj.h_text{I} = text(obj.h_axes_text,time,ylim(1),display_string,...
                 'Rotation',90,'UserData',I,'BackgroundColor',[1 1 1 0.2],...
                 'ButtonDownFcn',@(~,~)obj.commentSelected(I));
+        end
+        function updateTextString(obj,new_msg,I)
+            display_string = h__getDisplayString(new_msg,I);
+            set(obj.h_text{I},'String',display_string)   
         end
         function renderCommentLines(obj)
 
@@ -252,16 +330,33 @@ classdef comment_plotter < handle
             end
 
             new_string = answer{1};
-            obj.strings{I} = new_string;
-            display_string = h__getDisplayString(new_string,I);
-            set(obj.h_text{I},'String',display_string)
+            
+            obj.comments.editCommentText(I,new_string);
 
-            %Notify everyone
-            %-----------------------------------
-            s = struct;
-            s.new_string = new_string;
-            s.comment_index = I;
-            obj.commentsUpdated('comment_edited',s)
+            %TODO: call the method
+            obj.updateTextString(new_string,I);
+
+            % %Notify everyone
+            % %-----------------------------------
+            % s = struct;
+            % s.new_string = new_string;
+            % s.comment_index = I;
+            % obj.commentsUpdated('comment_edited',s)
+        end
+        function deleteComment(obj)
+            I = obj.selected_line_I;
+
+            obj.comments.deleteComment(I);
+            % obj.is_deleted(I) = true;
+            
+            set(obj.h_text{I},'Visible','off')
+            obj.renderCommentLines();
+            
+            % %Notify everyone
+            % %-----------------------------------
+            % s = struct;
+            % s.comment_index = I;
+            % obj.commentsUpdated('comment_deleted',s)
         end
         function commentSelected(obj,I)
             %
@@ -294,9 +389,11 @@ classdef comment_plotter < handle
             
             %JAH AT THIS POINT
 
-            keyboard
-            obj.mouse_man.setMouseMotionFunction(@obj.movingComment);
-            obj.mouse_man.setMouseUpFunction(@obj.mouseUp);
+            set(obj.h_fig, 'WindowButtonMotionFcn',@(~,~)obj.movingComment);
+            set(obj.h_fig, 'WindowButtonUpFcn',@(~,~)obj.mouseUp);
+            
+            % obj.mouse_man.setMouseMotionFunction(@obj.movingComment);
+            % obj.mouse_man.setMouseUpFunction(@obj.mouseUp);
         end
         function movingComment(obj)
             %
@@ -315,28 +412,30 @@ classdef comment_plotter < handle
             %Update time based on mouse
             %------------------------------------
             x_line = get(obj.h_line_temp,'X');
-            new_time = interactive_plot.utils.translateXFromFigToAxes(...
-                obj.bottom_axes,x_line(1));
+            new_time = h__translateXFromFigToAxes(obj.h_axes_text,x_line(1));
             
-            obj.times(obj.selected_line_I) = new_time;
+            obj.comments.moveComment(obj.selected_line_I,new_time)
+            % obj.times(obj.selected_line_I) = new_time;
             
-            %Move tet and reset text color
+            %Move text and reset text color
             %--------------------------------------
             set(h,'Color','k')
             obj.h_text{obj.selected_line_I}.Position(1) = new_time;
             
             delete(obj.h_line_temp);
             
-            obj.mouse_man.initDefaultState();
+            set(obj.h_fig,'WindowButtonUpFcn','');
+            set(obj.h_fig,'WindowButtonMotionFcn','');
+            % obj.mouse_man.initDefaultState();
             
-            obj.renderComments();
+            obj.renderCommentLines();
             
-            %Notify everyone
-            %-----------------------------------
-            s = struct;
-            s.new_time = new_time;
-            s.comment_index = obj.selected_line_I;
-            obj.commentsUpdated('comment_moved',s)
+            % % %Notify everyone
+            % % %-----------------------------------
+            % % s = struct;
+            % % s.new_time = new_time;
+            % % s.comment_index = obj.selected_line_I;
+            % % obj.commentsUpdated('comment_moved',s)
         end
     end
 end
@@ -364,6 +463,27 @@ if in.pixels
 end
 
 end
+
+function x_axes = h__translateXFromFigToAxes(h_axes,x_fig)
+%
+%   x_axes = interactive_plot.utils.translateXFromFigToAxes(h_axes,x_fig)
+
+xlim = get(h_axes,'XLim');
+
+p_axes = get(h_axes,'position');
+            
+x1 = p_axes(1);
+x2 = p_axes(1)+p_axes(3);
+y1 = xlim(1);
+y2 = xlim(2);
+
+m = (y2 - y1)./(x2 - x1);
+b = y2 - m*x2;
+
+x_axes = m*x_fig + b;  
+
+end
+
 
 function display_string = h__getDisplayString(string,I)
     display_string = sprintf(' %d) %s',I,string);

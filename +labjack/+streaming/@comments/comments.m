@@ -17,7 +17,7 @@ classdef comments < handle
         end
         c = labjack.streaming.comments();
         c.addComments(msgs,times);
-        cp = c.getCommentPlotter(ax);
+        c.enableCommentPlotting(ax);
     %}
 
     properties (Dependent)
@@ -39,6 +39,8 @@ classdef comments < handle
         
         %%matlab.io.MatFile or empty
         h_mat
+
+        plotter labjack.streaming.comment_plotter
     end
 
     methods
@@ -100,6 +102,11 @@ classdef comments < handle
             obj.n_comments = obj.n_comments + 1;
             I = obj.last_id;
             obj.saveEntry(I);
+
+            %TODO: 
+            if ~isempty(obj.plotter)
+                
+            end
         end
         function saveEntry(obj,I)
            if ~isempty(obj.h_mat)
@@ -130,10 +137,8 @@ classdef comments < handle
             obj.h_deleted(id) = true;
             obj.saveEntry(id);
         end
-        function cp = getCommentPlotter(obj,h_axes)
-            %TODO: Figure out how to expose this better
-            h_axes_text = h_axes(end);
-            cp = labjack.streaming.comment_plotter(h_axes,h_axes_text,obj);
+        function enableCommentPlotting(obj,h_axes)
+            obj.plotter = labjack.streaming.comment_plotter(h_axes,obj);
         end
     end
 end
