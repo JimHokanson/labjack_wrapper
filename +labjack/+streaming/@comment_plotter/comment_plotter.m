@@ -13,6 +13,7 @@ classdef comment_plotter < handle
     %   -------------
     %   - plots comments
     %   - allows moving comments (click on the text to move)
+    %   - deleting comments
     %   - add comments (how to expose?) (NOT YET IMPLEMENTED)
     %       - eventually have interface
     %       - for now, expect GUI code to handle on its own
@@ -41,7 +42,7 @@ classdef comment_plotter < handle
     %
     %   Improvements
     %   ------------
-    %   1) Allow a cell array of axes as an input
+    %   1) DONE Allow a cell array of axes as an input
     %   2) Make the text axes the bottom one by default
     %   3) Allow aligning text on the top of an axes (for use on the
     %   top most axes)
@@ -65,30 +66,37 @@ classdef comment_plotter < handle
 
 
     properties
+        %This is the actual data. It is expected that this is created
+        %first and then the plotter is retrieved from the data class.
         comments labjack.streaming.comments
 
         %One line handle per axes
         %Holds vertical line data for all coments, linked by NaN points
+        %
+        %   This gets rerendered every time lines change
         h_lines
         
         %Cell array, one per text entry
+        %
+        %   This is only attached to one axes, the "h_axes_text"
         h_text
 
+
+
+
+        h_fig
+        h_axes matlab.graphics.axis.Axes
+        h_axes_text matlab.graphics.axis.Axes
+        y_bottom_axes
+        y_top_axes
+
+        %Menus and callbacks
+        %----------------
         %First menu item - for showing the name of the selected label
         h_m1  %uimenu
         
         %Handle to the menu for moving and making visible
         h_menu  %uicontextmenu
-
-
-        h_fig
-        h_axes
-        h_axes_text
-        y_bottom_axes
-        y_top_axes
-
-        %Callbacks
-        %----------------
         selected_line_I
         h_line_temp
 
@@ -129,7 +137,7 @@ classdef comment_plotter < handle
     end
 
     methods
-        function obj = comment_plotter(h_axes,comments)
+        function obj = comment_plotter(h_axes,comments,options)
             %
             %   labjack.streaming.comment_plotter(h_axes,h_axes_text,comments)
             %
@@ -138,6 +146,12 @@ classdef comment_plotter < handle
             %   h_axes: {axes} or [axes] 
             %       All relevant axes. These should generally be stacked.
             %   comments: labjack.streaming.comments
+
+            arguments
+                h_axes
+                comments
+                options.use_ylim_callback = true
+            end
 
             if iscell(h_axes)
                 n_cells = length(h_axes);
@@ -157,6 +171,9 @@ classdef comment_plotter < handle
                 obj.h_fig.Units = "normalized";
             end
 
+
+            %Establishing top and bottom axes
+            %--------------------------------------------------------
             n_axes = length(h_axes);
             y_bottom = zeros(1,n_axes);
 
@@ -172,17 +189,25 @@ classdef comment_plotter < handle
 
             obj.h_axes_text = h_bottom_axes;
 
-
             p_top = get(h_top_axes,'Position');
             obj.y_top_axes = p_top(2)+p_top(4);
             p_bottom = get(h_bottom_axes,'Position');
             obj.y_bottom_axes = p_bottom(2);
 
-            obj.ylim_listener = addlistener(obj.h_axes_text, 'YLim', ...
-                'PostSet', @(~,~) obj.ylimChanged);
-            % obj.fig_size_listener = addlistener(obj.h_axes_text, 'Position', ...
-            %     'PostSet', @(~,~) obj.ylimChanged);
+            %Callback for text axes - adjust text position
+            %--------------------------------------------------------------
+            if options.use_ylim_callback
+                %https://www.mathworks.com/matlabcentral/discussions/highlights/134586-new-in-r2021a-limitschangedfcn
+                obj.h_axes_text.YAxis.LimitsChangedFcn = @(~,~)obj.ylimChanged;
+            else
+                %This is not very good but doesn't override the user.
+                obj.ylim_listener = addlistener(obj.h_axes_text, 'YLim', ...
+                    'PostSet', @(~,~) obj.ylimChanged);
+            end
 
+
+            %Context Menu Setup
+            %----------------------------------------
             c = uicontextmenu;
             
             obj.h_m1 = uimenu(c,'label','');
@@ -192,6 +217,8 @@ classdef comment_plotter < handle
             
             obj.h_menu = c;
             
+            %Initialization of h_line
+            %-------------------------------------------
             n_axes = length(obj.h_axes);
             temp = cell(1,n_axes);
             for i = 1:n_axes
@@ -202,6 +229,8 @@ classdef comment_plotter < handle
 
             obj.h_lines = temp;
 
+            %Initialization of h_text
+            %--------------------------------------------
             n_init = 100;
             if obj.n_comments > n_init
                 n_init = 2*obj.n_comments;
@@ -209,6 +238,8 @@ classdef comment_plotter < handle
 
             obj.h_text = cell(1,n_init);
 
+            %Plotting of initial comments
+            %-------------------------------------------------
             obj.renderCommentLines();
             strings2 = obj.strings;
             times2 = obj.times;
@@ -220,7 +251,17 @@ classdef comment_plotter < handle
             end
 
         end
+        function renderNewestComment(obj)
+            %
+            %   Assumes a new comment has been added with the comments
+            %   object
+            I = obj.n_comments;
+            msg = obj.strings(I);
+            time = obj.times(I);
+            obj.renderTextEntry(msg,time,I);
+        end
         function renderTextEntry(obj,msg,time,I)
+            %TODO: Do a resize check on h_axes
             ylim = obj.h_axes_text.YLim;
             display_string = h__getDisplayString(msg,I);
             obj.h_text{I} = text(obj.h_axes_text,time,ylim(1),display_string,...
@@ -272,7 +313,6 @@ classdef comment_plotter < handle
             %   We need to adjust all of the text positions because the
             %   text is placed in axes coordinates.
             
-            disp('I ran')
             ylim = get(obj.h_axes_text,'YLim');
             for i = 1:obj.n_comments
                 obj.h_text{i}.Position(2) = ylim(1);
@@ -288,6 +328,11 @@ classdef comment_plotter < handle
             %
             %
             %   When right clicking, show the uicontextmenu
+            %
+            %   Options
+            %   -------
+            %   - delete
+            %   - edit text
             %
             %   Format:
             %   1 - show the selected string
@@ -387,8 +432,6 @@ classdef comment_plotter < handle
             y_line = [obj.y_bottom_axes obj.y_top_axes];
             obj.h_line_temp = annotation('line',[x x],y_line,'Color','r');
             
-            %JAH AT THIS POINT
-
             set(obj.h_fig, 'WindowButtonMotionFcn',@(~,~)obj.movingComment);
             set(obj.h_fig, 'WindowButtonUpFcn',@(~,~)obj.mouseUp);
             

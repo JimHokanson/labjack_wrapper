@@ -103,9 +103,8 @@ classdef comments < handle
             I = obj.last_id;
             obj.saveEntry(I);
 
-            %TODO: 
             if ~isempty(obj.plotter)
-                
+                obj.renderNewestComment();
             end
         end
         function saveEntry(obj,I)
@@ -138,6 +137,8 @@ classdef comments < handle
             obj.saveEntry(id);
         end
         function enableCommentPlotting(obj,h_axes)
+            %
+            %   h_axes : {axes} or [axes]
             obj.plotter = labjack.streaming.comment_plotter(h_axes,obj);
         end
     end
