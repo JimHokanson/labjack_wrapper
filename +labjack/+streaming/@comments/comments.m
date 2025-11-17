@@ -20,11 +20,14 @@ classdef comments < handle
         c.enableCommentPlotting(ax);
     %}
 
+
+
     properties (Dependent)
         %cellstr
         values
         times
         ids
+        has_save_object
     end
 
     properties (Hidden)
@@ -52,6 +55,9 @@ classdef comments < handle
         end
         function out = get.ids(obj)
             out = obj.h_ids(~obj.h_deleted);
+        end
+        function out = get.has_save_object(obj)
+            out = ~isempty(obj.h_mat);
         end
     end
 
@@ -104,7 +110,7 @@ classdef comments < handle
             obj.saveEntry(I);
 
             if ~isempty(obj.plotter)
-                obj.renderNewestComment();
+                obj.plotter.renderNewestComment();
             end
         end
         function saveEntry(obj,I)
