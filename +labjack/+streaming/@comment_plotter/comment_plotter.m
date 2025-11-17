@@ -171,10 +171,16 @@ classdef comment_plotter < handle
                 obj.h_fig.Units = "normalized";
             end
 
+            n_axes = length(h_axes);
+            for i = 1:n_axes
+                if obj.h_axes(i).Units ~= "normalized"
+                    obj.h_axes(i).Units = "normalized";
+                end
+            end
 
             %Establishing top and bottom axes
             %--------------------------------------------------------
-            n_axes = length(h_axes);
+            
             y_bottom = zeros(1,n_axes);
 
             for i = 1:n_axes
@@ -208,7 +214,7 @@ classdef comment_plotter < handle
 
             %Context Menu Setup
             %----------------------------------------
-            c = uicontextmenu;
+            c = uicontextmenu(obj.h_fig);
             
             obj.h_m1 = uimenu(c,'label','');
             uimenu(c,'Label','delete comment','Separator','on',...
@@ -256,9 +262,10 @@ classdef comment_plotter < handle
             %   Assumes a new comment has been added with the comments
             %   object
             I = obj.n_comments;
-            msg = obj.strings(I);
+            msg = obj.strings{I};
             time = obj.times(I);
             obj.renderTextEntry(msg,time,I);
+            obj.renderCommentLines();
         end
         function renderTextEntry(obj,msg,time,I)
             %TODO: Do a resize check on h_axes
@@ -430,7 +437,7 @@ classdef comment_plotter < handle
             
             x = h__getCurrentMousePoint(obj.h_fig);
             y_line = [obj.y_bottom_axes obj.y_top_axes];
-            obj.h_line_temp = annotation('line',[x x],y_line,'Color','r');
+            obj.h_line_temp = annotation(obj.h_fig,'line',[x x],y_line,'Color','r');
             
             set(obj.h_fig, 'WindowButtonMotionFcn',@(~,~)obj.movingComment);
             set(obj.h_fig, 'WindowButtonUpFcn',@(~,~)obj.mouseUp);
