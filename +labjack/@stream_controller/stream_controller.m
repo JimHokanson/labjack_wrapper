@@ -174,6 +174,9 @@ classdef stream_controller < handle
 
             obj.streaming = true;
         end
+        function c = getNewCommentsObj(obj)
+            c = labjack.streaming.comments(obj.h_mat);
+        end
         function updateCalibration(obj,chan_index,m,b,units)
             %
             %   ASSUMES that the stream has started and that the mat file
@@ -248,7 +251,7 @@ classdef stream_controller < handle
                 obj.h,obj.temp_buffer,obj.n_channels,...
                 'logger',obj.stream_read_logger);
 
-            n1 = obj.data.n_samples_added;
+            
 
             %Add data to streaming/plotting object
             %--------------------------------------------------------------
@@ -257,6 +260,9 @@ classdef stream_controller < handle
             %   Two effects:
             %   1) Adds data to streaming objects. 
             %   2) Plots if visible (handled inside streaming object)
+
+            n1 = obj.data.n_samples_added;
+
             obj.data.addDAQData(s.data);
 
             n2 = obj.data.n_samples_added;
@@ -267,12 +273,19 @@ classdef stream_controller < handle
                 for i = 1:obj.n_channels
                     current_name = obj.chan_aliases{i};
 
+
+                    %TODO: Do we want to save calibrated data
+                    %to disk, or apply post-hoc?
+
                     current_name = ['data__' current_name]; %#ok<AGROW>
                     if n1(i) == 0
                         %h_mat: matlab.io.MatFile
                         % if i == 1
                         %     obj.h_mat.data = struct;
                         % end
+
+                        %TODO: Save sampling rate to disk
+
                         obj.h_mat.(current_name) = s.data{i};
                     else
                         obj.h_mat.(current_name)(n1(i)+1:n2(i),1) = s.data{i};
