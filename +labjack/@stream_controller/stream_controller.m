@@ -27,16 +27,29 @@ classdef stream_controller < handle
 
     properties
         h
+
+        %This is the global sampling rate. We don't currently support
+        %downsampling channels to some multiple of this, although it would
+        %be easy to implement.
         scan_rate
+
+        %How often we query the DAQ for new data.
         read_frequency
+
+        %Number of samples to grab when we query the DAQ for new data.
+        %Note, the DAQ blocks until this number of samples has been read.
+        %Making this low means quicker updates BUT there is some overhead
+        %in querying so if it is too low that could be problematic as well.
         scans_per_read
 
         %This is a list of strings indicating which DAQ channel to stream
-        %from
+        %from, e.g. AIN0, AIN1, etc.
+        %
+        %   cellstr
         chan_list
         
         %This is a list of names that indicates what is being recorded. It
-        %should not 
+        %should contain valid variable names as these are used for saving
         %
         %   cellstr
         chan_aliases
@@ -153,8 +166,11 @@ classdef stream_controller < handle
             %--------------------------------------------------
             if ~isempty(obj.current_save_path)
                 obj.h_mat = matlab.io.MatFile(obj.current_save_path);
-                obj.h_mat.calibration = struct;
-                obj.h_mat.data = struct;
+                obj.h_mat.stream__scan_rate = obj.scan_rate;
+                obj.h_mat.stream__read_frequency = obj.read_frequency;
+                obj.h_mat.stream__scans_per_read = obj.scans_per_read;
+                obj.h_mat.stream__chan_list = obj.chan_list;
+                obj.h_mat.stream__chan_aliases = obj.chan_aliases;
             end
 
             %Creation of the acquired data object which stores the
@@ -280,12 +296,6 @@ classdef stream_controller < handle
                     current_name = ['data__' current_name]; %#ok<AGROW>
                     if n1(i) == 0
                         %h_mat: matlab.io.MatFile
-                        % if i == 1
-                        %     obj.h_mat.data = struct;
-                        % end
-
-                        %TODO: Save sampling rate to disk
-
                         obj.h_mat.(current_name) = s.data{i};
                     else
                         obj.h_mat.(current_name)(n1(i)+1:n2(i),1) = s.data{i};
