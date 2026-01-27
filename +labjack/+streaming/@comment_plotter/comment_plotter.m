@@ -436,7 +436,16 @@ classdef comment_plotter < handle
             %comment
             
             x = h__getCurrentMousePoint(obj.h_fig);
+
+            %TODO: Why would these exceed 0 to 1 if we are using
+            %normalized?
             y_line = [obj.y_bottom_axes obj.y_top_axes];
+            if y_line(1) < 0
+                y_line(1) = 0;
+            end
+            if y_line(2) > 1
+                y_line(2) = 1;
+            end
             obj.h_line_temp = annotation(obj.h_fig,'line',[x x],y_line,'Color','r');
             
             set(obj.h_fig, 'WindowButtonMotionFcn',@(~,~)obj.movingComment);
@@ -461,8 +470,10 @@ classdef comment_plotter < handle
             
             %Update time based on mouse
             %------------------------------------
-            x_line = get(obj.h_line_temp,'X');
-            new_time = h__translateXFromFigToAxes(obj.h_axes_text,x_line(1));
+            %x_line = get(obj.h_line_temp,'X');
+            %new_time = h__translateXFromFigToAxes(obj.h_axes_text,x_line(1));
+            cp = get(obj.h_axes_text,'CurrentPoint');
+            new_time = cp(1);
             
             obj.comments.moveComment(obj.selected_line_I,new_time)
             % obj.times(obj.selected_line_I) = new_time;
