@@ -8,6 +8,9 @@ classdef comment_plotter < handle
     %
     %       c.enableCommentPlotting(ax);
     %   
+    %   Held by:
+    %   labjack.streaming.comments
+    %
     %
     %   Functionality
     %   -------------
@@ -256,6 +259,20 @@ classdef comment_plotter < handle
                 end
             end
 
+        end
+        function rerenderLine(obj,axes_index)
+            %
+            %   Added so that if we clear an axes, and then want 
+            %   to rerender comments, we can just all this.
+            %
+            %   Note, this only works for the axes that don't have
+            %   the text.
+
+            h_axes2 = obj.h_axes(axes_index);
+            obj.h_lines{axes_index} = line(...
+                h_axes2,[NaN NaN],[NaN NaN],...
+                'Color',0.5*ones(1,4),...
+                'YLimInclude','off');
         end
         function renderNewestComment(obj)
             %

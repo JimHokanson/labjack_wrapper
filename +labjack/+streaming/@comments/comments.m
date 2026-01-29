@@ -3,6 +3,9 @@ classdef comments < handle
     %   Class:
     %   labjack.streaming.comments
     %
+    %   Held by:
+    %   user
+    %
     %   See Also
     %   --------
     %   labjack.stream_controller
@@ -146,6 +149,10 @@ classdef comments < handle
             %
             %   h_axes : {axes} or [axes]
             obj.plotter = labjack.streaming.comment_plotter(h_axes,obj);
+        end
+        function reinitializeAxes(obj,axes_index)
+            obj.plotter.rerenderLine(axes_index);
+            obj.plotter.renderCommentLines();
         end
     end
 end
