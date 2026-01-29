@@ -188,6 +188,10 @@ classdef stream_controller < handle
                 obj.scans_per_read,obj.chan_list);
             s.channels = obj.data.daq_entries_array;
 
+            if ~isempty(obj.current_save_path)
+                obj.h_mat.stream__start_datetime = s.start_datetime;
+            end
+
             obj.streaming = true;
         end
         function c = getNewCommentsObj(obj)

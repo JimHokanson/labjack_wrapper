@@ -18,6 +18,7 @@ function s = startStream(handle,scan_rate,scans_per_read,scan_list)
 %   -------
 %   s : struct
 %       .scan_rate
+%       .start_datetime - this is approximate
 %
 %   Example
 %   -------
@@ -47,5 +48,6 @@ n_addresses = scan_list.Length;
 
 s = struct;
 s.scan_rate = scan_rate;
+s.start_datetime = datetime("now");
 
 end
